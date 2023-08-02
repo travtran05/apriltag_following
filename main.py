@@ -38,7 +38,7 @@ longitudinal_power = 0
 followRobot = False
 
 def _get_frame():
-    global frame, vertical_power, lateral_power, yaw_power, longitudinal_power
+    global frame, vertical_power, lateral_power, yaw_power, longitudinal_power, followRobot
     vertical_pid = PID(2, 0, 0, 100)
     horizontal_pid = PID(1, 0, 0, 100)
 
@@ -57,7 +57,6 @@ def _get_frame():
         while True:
             if video.frame_available():
                 frame = video.frame()
-                followRobot = False
                 
                 center_tags = detect_tag(frame, at_detector)
                 print("Got frame")
@@ -87,11 +86,16 @@ def _get_frame():
                             print("got lane")
                             
                             center_intercept, center_slope = get_lane_center(frame.shape[1], lanes)
+                            
                             horizontal_diff, heading_diff = recommend_direction(center_intercept, center_slope)
+                           
                             yaw_power, lateral_power = lane_PID(heading_diff, horizontal_diff, pid_heading_lf, pid_horizontal_lf)
+                          
                             img = draw_lanes(frame, lanes)
+                            
                             print(yaw_power)
                             print(lateral_power)
+                            
                             cv2.imwrite("ROV_frame.jpg", img)
                             
                         except:
@@ -117,12 +121,12 @@ def _send_rc():
     mav_comn.set_mode(19)
     while True:
         # bluerov.disarm()
-        bluerov.arm()
-        bluerov.set_vertical_power(int(vertical_power))
-        bluerov.set_lateral_power(-int(lateral_power))
-        bluerov.set_yaw_rate_power(int(yaw_power))
-        bluerov.set_longitudinal_power(int(longitudinal_power))
-
+        #bluerov.arm()
+        #bluerov.set_vertical_power(int(vertical_power))
+        #bluerov.set_lateral_power(-int(lateral_power))
+        #bluerov.set_yaw_rate_power(int(yaw_power))
+        #bluerov.set_longitudinal_power(int(longitudinal_power))
+        pass
 
 # Start the video thread
 video_thread = Thread(target=_get_frame)
