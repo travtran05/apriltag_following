@@ -175,8 +175,8 @@ predator:
     1. follows lane in straight line (alr done)
     2. keeps switching lanes once it gets to ends of lanes
     3. if it finds apriltag, follow robot until tag is in center of camera (done)
-    4. make it travel towards the robot without bumping into it using initialization matrix from dt apriltags built in thing? (Dr saad)
-    5. torpedoes (Dr Saad)
+    4. make it travel towards the robot without bumping into it using initialization matrix from dt apriltags built in thing? (done)
+    5. torpedoes (lights)
 
 Prey:
     1. do our dance
