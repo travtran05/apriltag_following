@@ -1,6 +1,6 @@
+# Imports
 from threading import Thread, Event
 from time import sleep
-
 from pid import PID
 from video import Video
 from bluerov_interface import BlueROV
@@ -10,15 +10,8 @@ import cv2
 
 # TODO: import your processing functions
 from apriltag_detection import *
-
-def write_video(video):
-    fps = int(video.get(cv2.CAP_PROP_FPS))
-    width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    output_file = 'output_apriltag_video.avi'
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    output_video = cv2.VideoWriter(output_file, fourcc, 30, (width, height))
+from lane_following import *
+from lane_detection import *
 
 
 
@@ -27,6 +20,8 @@ video = Video()
 # Create the PID object
 pid_vertical = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
 pid_horizontal = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
+pid_horizontal_lf = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
+pid_heading_lf = PID(K_p=30, K_i=0, K_d=-10, integral_limit=100)
 # Create the mavlink connection
 mav_comn = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
 # Create the BlueROV object
@@ -38,11 +33,12 @@ frame_available.set()
 
 vertical_power = 0
 lateral_power = 0
-
+yaw_power = 0
+followRobot = False
 
 def _get_frame():
-    global frame, vertical_power, lateral_power
-    vertical_pid = PID(1, 0, 0, 100)
+    global frame, vertical_power, lateral_power, yaw_power
+    vertical_pid = PID(2, 0, 0, 100)
     horizontal_pid = PID(1, 0, 0, 100)
     at_detector = Detector(families='tag36h11',
                     nthreads=1,
@@ -59,17 +55,47 @@ def _get_frame():
         while True:
             if video.frame_available():
                 frame = video.frame()
+                followRobot = False
+                """
                 center_tags = detect_tag(frame, at_detector)
                 print("Got frame")
                 if len(center_tags) > 0:
+                    followRobot = True
                     center_tags = center_tags[-1]
                     print("Got tag")
                     horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
                     img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
                     #TODO: set vertical_power and lateral_power here
-                    # vertical_power = vertical_output
-                    # later_power = horizontal_output
+                    vertical_power = vertical_output
+                    lateral_power = horizontal_output
                     cv2.imwrite("ROV_frame.jpg", img)
+                else:
+                    followRobot = False
+                    vertical_power = 0
+                    lateral_power = 0
+                """
+                if(followRobot == False):
+                    # Run lane following directions
+                    line_list = detect_lines(frame, 49, 50, 3, 500, 40)
+                    try:
+                        print("got line")
+                        lanes = detect_lanes(line_list)
+                        try:
+                            print("got lane")
+                            cv2.imwrite("ROV_frame.jpg", frame)
+                            center_intercept, center_slope = get_lane_center(frame.shape[1], lanes)
+                            horizontal_diff, heading_diff = recommend_direction(center_intercept, center_slope)
+                            yaw_power, lateral_power = lane_PID(heading_diff, horizontal_diff, pid_heading_lf, pid_horizontal_lf)
+                            
+                        except:
+                            followRobot = False
+                            vertical_power = 0
+                            lateral_power = 0
+                    except:
+                        followRobot = False
+                        vertical_power = 0
+                        lateral_power = 0                  
+
 
                     
     except KeyboardInterrupt:
@@ -77,11 +103,15 @@ def _get_frame():
 
 
 def _send_rc():
+    global vertical_power, lateral_power, yaw_power
+    bluerov.set_rc_channels_to_neutral()
+    mav_comn.set_mode(19)
     while True:
-        bluerov.disarm()
-        # bluerov.arm()
-        # bluerov.set_vertical_power(int(vertical_power))
-        # bluerov.set_lateral_power(int(lateral_power))
+        # bluerov.disarm()
+        bluerov.arm()
+        bluerov.set_vertical_power(int(vertical_power))
+        bluerov.set_lateral_power(-int(lateral_power))
+        bluerov.set_yaw_rate_power(int(yaw_power))
 
 
 # Start the video thread
