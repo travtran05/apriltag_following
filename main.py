@@ -6,6 +6,7 @@ from video import Video
 from bluerov_interface import BlueROV
 from pymavlink import mavutil
 from dt_apriltags import Detector
+import cv2
 
 # TODO: import your processing functions
 from apriltag_detection import *
@@ -54,15 +55,17 @@ def _get_frame():
     while not video.frame_available():
         print("Waiting for frame...")
         sleep(0.01)
-    try:
-        center_tags = detect_tag(frame, at_detector)
-        horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
-        img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
-        # TODO: set vertical_power and lateral_power here
-        vertical_power = vertical_output
-        later_power = horizontal_output
-    except KeyboardInterrupt:
-        return
+        try:
+            if len(frame) > 0:
+                cv2.imwrite("ROV_frame.jpg", frame)
+                #center_tags = detect_tag(frame, at_detector)
+                #horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
+                #img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
+                # TODO: set vertical_power and lateral_power here
+                #vertical_power = vertical_output
+                #later_power = horizontal_output
+        except KeyboardInterrupt:
+            return
 
 
 def _send_rc():
