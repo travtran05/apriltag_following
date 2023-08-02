@@ -168,9 +168,7 @@ predator:
 
 Prey:
     1. do our dance
-    2. irratically move all 6 directions
-
-
+    2. irratically move all 6 directions but make sure we don't hit walls with hard coding
 
 
 '''
