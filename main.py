@@ -69,12 +69,16 @@ def _get_frame():
                     #TODO: set vertical_power and lateral_power here
                     vertical_power = vertical_output
                     lateral_power = horizontal_output
+                    if(vertical_power == 0 and lateral_power == 0):
+                        longitudinal_power = 20
+                    else:
+                        longitudinal_power = 0
                     cv2.imwrite("ROV_frame.jpg", img)
                 else:
                     followRobot = False
                     vertical_power = 0
                     lateral_power = 0
-                    longitudinal_power = 20
+                    longitudinal_power = 0
                 
                 if(followRobot == False):
                     # Run lane following directions
@@ -88,13 +92,16 @@ def _get_frame():
                             center_intercept, center_slope = get_lane_center(frame.shape[1], lanes)
                             
                             horizontal_diff, heading_diff = recommend_direction(center_intercept, center_slope)
-                           
-                            yaw_power, lateral_power = lane_PID(heading_diff, horizontal_diff, pid_heading_lf, pid_horizontal_lf)
-                          
-                            img = draw_lanes(frame, lanes)
+                            if(horizontal_diff != 0 and heading_diff != 0):
+                                longitudinal_power = 0
+                                yaw_power, lateral_power = lane_PID(heading_diff, horizontal_diff, pid_heading_lf, pid_horizontal_lf)
                             
-                            print(yaw_power)
-                            print(lateral_power)
+                                img = draw_lanes(frame, lanes)
+                                
+                                print(yaw_power)
+                                print(lateral_power)
+                            else:
+                                longitudinal_power = 20
 
                             cv2.imwrite("ROV_frame.jpg", img)
                             
@@ -102,12 +109,12 @@ def _get_frame():
                             followRobot = False
                             vertical_power = 0
                             lateral_power = 0
-                            longitudinal_power = 20
+                            longitudinal_power = 0
                     except:
                         followRobot = False
                         vertical_power = 0
                         lateral_power = 0
-                        longitudinal_power = 20                  
+                        longitudinal_power = 0                  
 
 
                     
@@ -145,3 +152,25 @@ except KeyboardInterrupt:
     rc_thread.join()
     bluerov.disarm()
     print("Exiting...")
+
+
+
+'''
+
+steps to turn this code into prey/predator
+
+predator:
+    1. follows lane in straight line (alr done)
+    2. keeps switching lanes once it gets to ends of lanes
+    3. if it finds apriltag, follow robot until tag is in center of camera (done)
+    4. make it travel towards the robot without bumping into it using initialization matrix from dt apriltags built in thing? (Dr saad)
+    5. torpedoes (Dr Saad)
+
+Prey:
+    1. do our dance
+    2. irratically move all 6 directions
+
+
+
+
+'''
