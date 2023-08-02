@@ -95,14 +95,14 @@ def _get_frame():
                             
                             print(yaw_power)
                             print(lateral_power)
-                            
+
                             cv2.imwrite("ROV_frame.jpg", img)
                             
                         except:
                             followRobot = False
                             vertical_power = 0
                             lateral_power = 0
-                            longitudinal_power = 0
+                            longitudinal_power = 20
                     except:
                         followRobot = False
                         vertical_power = 0
