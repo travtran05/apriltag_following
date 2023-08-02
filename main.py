@@ -41,15 +41,26 @@ lateral_power = 0
 
 def _get_frame():
     global frame
+    vertical_pid = PID(1, 0, 0, 100)
+    horizontal_pid = PID(1, 0, 0, 100)
+    at_detector = Detector(families='tag36h11',
+                    nthreads=1,
+                    quad_decimate=1.0,
+                    quad_sigma=0.0,
+                    refine_edges=1,
+                    decode_sharpening=0.25,
+                    debug=0)
+
     while not video.frame_available():
         print("Waiting for frame...")
         sleep(0.01)
-
-    vertical_pid = PID(1, 0, 0, 100)
-    horizontal_pid = PID(1, 0, 0, 100)
     try:
+        center_tags = detect_tag(frame, at_detector)
+        horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
+        img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
         # TODO: set vertical_power and lateral_power here
-        pass
+        vertical_power = vertical_output
+        later_power = horizontal_output
     except KeyboardInterrupt:
         return
 
