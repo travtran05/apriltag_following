@@ -62,8 +62,8 @@ def drawOnImage(img, tagPositions, horizontalPidOutput, verticalPidOutput):
     yCord = tagPositions[1]
     cv2.circle(img, (int(xCord),int(yCord)), 50, (255, 0, 0), 5)
     #draw where the center of the tag lies on the x an y axis
-    cv2.circle(img, (int(imgWidth/2),int(yCord)), 50, (255, 0, 0), 5)
-    cv2.circle(img, (int(xCord),int(imgHeight/2)), 50, (255, 0, 0), 5)
+    cv2.circle(img, (int(heightCenter),int(yCord)), 50, (255, 0, 0), 5)
+    cv2.circle(img, (int(xCord),int(widthCenter)), 50, (255, 0, 0), 5)
     #draw the PID vectors as arrows
     cv2.arrowedLine(img, (widthCenter,heightCenter), (widthCenter, int(verticalPidOutput) + heightCenter), 
             (0, 100, 255), 5, tipLength = 0.5)
