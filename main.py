@@ -7,6 +7,7 @@ from bluerov_interface import BlueROV
 from pymavlink import mavutil
 from dt_apriltags import Detector
 import cv2
+import time
 
 # TODO: import your processing functions
 from apriltag_detection import *
@@ -74,6 +75,17 @@ def _get_frame():
                     else:
                         longitudinal_power = 0
                     cv2.imwrite("ROV_frame.jpg", img)
+
+                    if (center_tags.pose_t[2]<1):
+                        for i in range(10):
+                            bluerov.set_rc_channel(9,1100)
+                            time.sleep(0.2)
+                            bluerov.set_rc_channel(9,1500)
+
+                        vertical_power = 0
+                        lateral_power = 0
+                        longitudinal_power = 0
+
                 else:
                     followRobot = False
                     vertical_power = 0
