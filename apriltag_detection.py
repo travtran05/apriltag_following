@@ -54,21 +54,26 @@ def drawOnImage(img, tagPositions, horizontalPidOutput, verticalPidOutput):
     Also takes in the horizontalPid and verticalPid outputs
     """
     #draw the center of the tag
-    imgWidth =  img.shape[0]
-    imgHeight =  img.shape[1]
+    imgWidth =  img.shape[1]
+    imgHeight =  img.shape[0]
     widthCenter = int(imgWidth/2)
     heightCenter = int(imgHeight/2)
     xCord = tagPositions[0]
     yCord = tagPositions[1]
     cv2.circle(img, (int(xCord),int(yCord)), 50, (255, 0, 0), 5)
     #draw where the center of the tag lies on the x an y axis
-    cv2.circle(img, (int(heightCenter),int(yCord)), 50, (255, 0, 0), 5)
-    cv2.circle(img, (int(xCord),int(widthCenter)), 50, (255, 0, 0), 5)
+    cv2.circle(img, (int(widthCenter),int(yCord)), 50, (255, 0, 0), 5)
+    cv2.circle(img, (int(xCord),int(heightCenter)), 50, (255, 0, 0), 5)
     #draw the PID vectors as arrows
-    cv2.arrowedLine(img, (widthCenter,heightCenter), (widthCenter, int(verticalPidOutput) + heightCenter), 
-            (0, 100, 255), 5, tipLength = 0.5)
-    cv2.arrowedLine(img, (widthCenter,heightCenter), (int(horizontalPidOutput) + widthCenter,heightCenter), 
-            (0, 100, 255), 5, tipLength = 0.5)
+    #cv2.arrowedLine(img, (widthCenter,heightCenter), (widthCenter, -int((verticalPidOutput/100)*15) - heightCenter), 
+            #(0, 100, 255), 5)
+    #cv2.arrowedLine(img, (widthCenter,heightCenter), (-int((horizontalPidOutput/100)*5) + widthCenter,heightCenter), 
+            #(0, 100, 255), 5)
+
+    cv2.arrowedLine(img, (widthCenter,heightCenter), (widthCenter, int(yCord)), 
+            (0, 100, 255), 5)
+    cv2.arrowedLine(img, (widthCenter,heightCenter), (int(xCord),heightCenter), 
+            (0, 100, 255), 5)
     
     cv2.putText(img, str(horizontalPidOutput), (300, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
     cv2.putText(img, str(verticalPidOutput), (300, 500), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
