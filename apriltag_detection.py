@@ -23,7 +23,7 @@ def write_video(video):
         frames.append(frame)
     return frames
 
-def detect_tag(frame, at_detector, cameraMatrix = numpy.array([ 1060.71, 0, 960, 0, 1060.71, 540, 0, 0, 1]).reshape((3,3))):
+def detect_tag(frame, at_detector, cameraMatrix = numpy.array([ 353.571428571, 0, 320, 0, 353.571428571, 180, 0, 0, 1]).reshape((3,3))):
 
     camera_params = ( cameraMatrix[0,0], cameraMatrix[1,1], cameraMatrix[0,2], cameraMatrix[1,2] )
 
