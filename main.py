@@ -34,12 +34,14 @@ frame_available.set()
 vertical_power = 0
 lateral_power = 0
 yaw_power = 0
+longitudinal_power = 0
 followRobot = False
 
 def _get_frame():
-    global frame, vertical_power, lateral_power, yaw_power
+    global frame, vertical_power, lateral_power, yaw_power, longitudinal_power
     vertical_pid = PID(2, 0, 0, 100)
     horizontal_pid = PID(1, 0, 0, 100)
+
     at_detector = Detector(families='tag36h11',
                     nthreads=1,
                     quad_decimate=1.0,
@@ -56,7 +58,7 @@ def _get_frame():
             if video.frame_available():
                 frame = video.frame()
                 followRobot = False
-                """
+                
                 center_tags = detect_tag(frame, at_detector)
                 print("Got frame")
                 if len(center_tags) > 0:
@@ -73,7 +75,8 @@ def _get_frame():
                     followRobot = False
                     vertical_power = 0
                     lateral_power = 0
-                """
+                    longitudinal_power = 20
+                
                 if(followRobot == False):
                     # Run lane following directions
                     line_list = detect_lines(frame, 49, 50, 3, 500, 40)
@@ -91,10 +94,12 @@ def _get_frame():
                             followRobot = False
                             vertical_power = 0
                             lateral_power = 0
+                            longitudinal_power = 0
                     except:
                         followRobot = False
                         vertical_power = 0
-                        lateral_power = 0                  
+                        lateral_power = 0
+                        longitudinal_power = 20                  
 
 
                     
@@ -112,6 +117,7 @@ def _send_rc():
         bluerov.set_vertical_power(int(vertical_power))
         bluerov.set_lateral_power(-int(lateral_power))
         bluerov.set_yaw_rate_power(int(yaw_power))
+        bluerov.set_longitudinal_power(int(longitudinal_power))
 
 
 # Start the video thread
