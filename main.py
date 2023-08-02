@@ -85,10 +85,14 @@ def _get_frame():
                         lanes = detect_lanes(line_list)
                         try:
                             print("got lane")
-                            cv2.imwrite("ROV_frame.jpg", frame)
+                            
                             center_intercept, center_slope = get_lane_center(frame.shape[1], lanes)
                             horizontal_diff, heading_diff = recommend_direction(center_intercept, center_slope)
                             yaw_power, lateral_power = lane_PID(heading_diff, horizontal_diff, pid_heading_lf, pid_horizontal_lf)
+                            img = draw_lanes(frame, lanes)
+                            print(yaw_power)
+                            print(lateral_power)
+                            cv2.imwrite("ROV_frame.jpg", img)
                             
                         except:
                             followRobot = False
