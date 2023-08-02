@@ -31,8 +31,13 @@ def detect_tag(frame, at_detector, cameraMatrix = numpy.array([ 1060.71, 0, 960,
     color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     shape = img.shape
     tags = at_detector.detect(img, True, camera_params, tag_size = 0.1)
-    for tag in tags:
-        pos = tag.center
+    # tags = at_detector.detect(img, True, )
+    
+    pos = []
+    if len(tags) > 0: 
+        for tag in tags:
+            pos.append(tag.center)
+
     return pos
 
 def PID_tags(frameShape, horizontal_distance, vertical_distance, horizontal_pid, vertical_pid):

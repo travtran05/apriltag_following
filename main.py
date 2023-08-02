@@ -41,7 +41,7 @@ lateral_power = 0
 
 
 def _get_frame():
-    global frame
+    global frame, vertical_power, lateral_power
     vertical_pid = PID(1, 0, 0, 100)
     horizontal_pid = PID(1, 0, 0, 100)
     at_detector = Detector(families='tag36h11',
@@ -59,20 +59,29 @@ def _get_frame():
         while True:
             if video.frame_available():
                 frame = video.frame()
-                cv2.imwrite("ROV_frame.jpg", frame)
                 center_tags = detect_tag(frame, at_detector)
-                horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
-                img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
-                #TODO: set vertical_power and lateral_power here
-                vertical_power = vertical_output
-                later_power = horizontal_output
+                print("Got frame")
+                if len(center_tags) > 0:
+                    center_tags = center_tags[-1]
+                    print("Got tag")
+                    horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
+                    img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
+                    #TODO: set vertical_power and lateral_power here
+                    # vertical_power = vertical_output
+                    # later_power = horizontal_output
+                    cv2.imwrite("ROV_frame.jpg", img)
+
+                    
     except KeyboardInterrupt:
         return
 
 
 def _send_rc():
-    bluerov.set_vertical_power(vertical_power)
-    bluerov.set_lateral_power(lateral_power)
+    while True:
+        bluerov.disarm()
+        # bluerov.arm()
+        # bluerov.set_vertical_power(int(vertical_power))
+        # bluerov.set_lateral_power(int(lateral_power))
 
 
 # Start the video thread
