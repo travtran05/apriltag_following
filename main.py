@@ -127,8 +127,11 @@ def _get_frame():
                 
                 # Checks if the AUV isn't following another robot and performs lane detection/following
                 if(followRobot == False):
+                    
                     # Creates a list of the lines that have been detected
                     line_list = detect_lines(frame, 49, 50, 3, 500, 40)
+
+                    ## add turning here
 
                     # Tries to detect the lanes from any lines that have been found
                     try:
