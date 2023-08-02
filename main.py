@@ -60,12 +60,12 @@ def _get_frame():
             if video.frame_available():
                 frame = video.frame()
                 cv2.imwrite("ROV_frame.jpg", frame)
-                #center_tags = detect_tag(frame, at_detector)
-                #horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
-                #img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
-                # TODO: set vertical_power and lateral_power here
-                #vertical_power = vertical_output
-                #later_power = horizontal_output
+                center_tags = detect_tag(frame, at_detector)
+                horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
+                img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
+                #TODO: set vertical_power and lateral_power here
+                vertical_power = vertical_output
+                later_power = horizontal_output
     except KeyboardInterrupt:
         return
 
