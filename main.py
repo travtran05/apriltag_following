@@ -55,8 +55,10 @@ def _get_frame():
     while not video.frame_available():
         print("Waiting for frame...")
         sleep(0.01)
-        try:
-            if len(frame) > 0:
+    try:
+        while True:
+            if video.frame_available():
+                frame = video.frame()
                 cv2.imwrite("ROV_frame.jpg", frame)
                 #center_tags = detect_tag(frame, at_detector)
                 #horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
@@ -64,8 +66,8 @@ def _get_frame():
                 # TODO: set vertical_power and lateral_power here
                 #vertical_power = vertical_output
                 #later_power = horizontal_output
-        except KeyboardInterrupt:
-            return
+    except KeyboardInterrupt:
+        return
 
 
 def _send_rc():
