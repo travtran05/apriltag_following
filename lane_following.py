@@ -80,7 +80,7 @@ def recommend_direction(frameWidth, center, slope):
 
     return HorizontalDiff, AproxAUVAngle 
 
-def lane_PID(heading_error, strafe_error, heading_pid, strafe_pid):
+def lane_PID(frameWidth, heading_error, strafe_error, heading_pid, strafe_pid):
     """
     Function: Calculates the PID outputs for the differences in angle and horizontal position between the AUV
               and the center of the lane
@@ -95,5 +95,5 @@ def lane_PID(heading_error, strafe_error, heading_pid, strafe_pid):
     """
     
     heading_output = np.clip(heading_pid.update(heading_error),-100,100) * 100
-    strafe_output = np.clip(strafe_pid.update(strafe_error),-100,100) * 100
+    strafe_output = np.clip(strafe_pid.update(strafe_error/frameWidth),-100,100) * 100
     return heading_output, strafe_output

@@ -133,7 +133,7 @@ def _get_frame():
                 
                 # Checks if the AUV isn't following another robot and performs lane detection/following
                 if(followRobot == False):
-                    frame = cv2.imread("ROV_frame.jpg")
+                    #frame = cv2.imread("ROV_frame.jpg")#halllucinate a img during testing
 
 
                     #turn
@@ -160,9 +160,20 @@ def _get_frame():
                             center_intercept, center_slope = get_lane_center(img.shape[1],pickedLane)
                             print(f"center_intercept:{center_intercept} center_slope:{center_slope}")
                             HorizontalDiff, AproxAUVAngle = recommend_direction(img.shape[1], center_intercept, center_slope)
-                            print (f"HorizontalDiff:{HorizontalDiff} AproxAUVAngle: {AproxAUVAngle}")
-                            yaw_power = AproxAUVAngle/2
-                            lateral_power = HorizontalDiff/40
+                            print (f"HorizontalDiff:{HorizontalDiff/40} AproxAUVAngle: {AproxAUVAngle/2}")
+                            #yaw_power = AproxAUVAngle/1
+                            #lateral_power = HorizontalDiff/10
+                            
+                            if(abs(HorizontalDiff) < 20 and abs(AproxAUVAngle < 3)):
+                                # Sets longitudinal power to 0 to make sure the AUV isn't moving straight at the same time the robot is realigning itself
+                                longitudinal_power = 0
+                                # Calculates the yaw and lateral thruster powers
+                                #yaw_power, lateral_power = lane_PID(AproxAUVAngle, HorizontalDiff/100, pid_heading_lf, pid_horizontal_lf)
+                                #yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, 0, pid_heading_lf, pid_horizontal_lf)
+                            else:
+                                pass
+                                # Sets longitudinal power to 0 so the robot moves forward
+                                #longitudinal_power = 20
                             
 
                         except:

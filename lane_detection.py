@@ -28,6 +28,7 @@ def PickLaneFromImage(frame):
     print(f"found lanes!: {lanes}")
     # print ("tried to detect lanes")
     pickedLane = pick_lane(lanes)
+    print(f"picked lane!: {pickedLane}")
     return pickedLane
 
 def angle_between_lines(m1, m2):
@@ -176,7 +177,7 @@ def detect_lanes(lines):
                 #print(f"DistREQ:{abs(xInterceptList[i]-xInterceptList[j])}")
                 #print(f"slopeREQ:{abs(1/ slopeList[i]-1 /slopeList[j])}")
                 # if statement to make sure lane is not too big (multiple lanes as one) not too different in slope (wrong side/ different lanes) and not too horizontal (other lienes reced as pool lane)
-                if(InterceptDist > 100 and InterceptDist< 750 and slopeDiff< 1 and abs(slopeThing) < 3 ):
+                if(InterceptDist > 50 and InterceptDist< 1000 and slopeDiff< 1 ):
                     #print(f"1/ slope:{slopeThing}")
                     xPoint = ((slopeList[i] * xInterceptList[i]) - (slopeList[j] * xInterceptList[j]))/(slopeList[i]-slopeList[j])
                     yPoint = slopeList[i]*(xPoint - xInterceptList[i]) + 1080
