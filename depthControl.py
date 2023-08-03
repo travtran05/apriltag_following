@@ -37,7 +37,7 @@ def set_vertical_power(mav, power=0):
 
     power = int(power)
 
-    set_rc_channel_pwm(mav, 3, 1500 + power * 5)
+    set_rc_channel_pwm(mav, 3, 1500 + power * 3)
 
 
 def press_to_depth(pressure):
@@ -106,13 +106,13 @@ def main():
 
         output = pid.update(error)
         print("Output: ", output)
-        
-        '''
+
+
         # set vertical power
         set_vertical_power(
             mav, -output
         )  # negative because of the direction of the thruster
-        '''
+
 
 
 if __name__ == "__main__":

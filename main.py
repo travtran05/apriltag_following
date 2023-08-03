@@ -168,8 +168,8 @@ def _get_frame():
                                 # Sets longitudinal power to 0 to make sure the AUV isn't moving straight at the same time the robot is realigning itself
                                 longitudinal_power = 0
                                 # Calculates the yaw and lateral thruster powers
-                                #yaw_power, lateral_power = lane_PID(AproxAUVAngle, HorizontalDiff/100, pid_heading_lf, pid_horizontal_lf)
-                                #yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, 0, pid_heading_lf, pid_horizontal_lf)
+                                yaw_power, lateral_power = lane_PID(AproxAUVAngle, HorizontalDiff/100, pid_heading_lf, pid_horizontal_lf)
+                                # yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, 0, pid_heading_lf, pid_horizontal_lf)
                             else:
                                 pass
                                 # Sets longitudinal power to 0 so the robot moves forward
@@ -211,12 +211,12 @@ def _send_rc():
     mav_comn.set_mode(19)
     while True:
         # bluerov.disarm()
-        bluerov.arm()
+        # bluerov.arm()
 
         # Sets the powers of the thrusters based on outputs for the PID controllers
         #bluerov.set_vertical_power(int(vertical_power))
-        #bluerov.set_lateral_power(-int(lateral_power))
-        #bluerov.set_yaw_rate_power(int(yaw_power))
+        bluerov.set_lateral_power(-int(lateral_power))
+        bluerov.set_yaw_rate_power(int(yaw_power))
         #bluerov.set_longitudinal_power(int(longitudinal_power))
 
 # Start the video thread
