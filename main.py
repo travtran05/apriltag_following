@@ -214,10 +214,10 @@ def _send_rc():
         bluerov.arm()
 
         # Sets the powers of the thrusters based on outputs for the PID controllers
-        bluerov.set_vertical_power(int(vertical_power))
-        bluerov.set_lateral_power(-int(lateral_power))
+        #bluerov.set_vertical_power(int(vertical_power))
+        #bluerov.set_lateral_power(-int(lateral_power))
         #bluerov.set_yaw_rate_power(int(yaw_power))
-        bluerov.set_longitudinal_power(int(longitudinal_power))
+        #bluerov.set_longitudinal_power(int(longitudinal_power))
 
 # Start the video thread
 video_thread = Thread(target=_get_frame)
