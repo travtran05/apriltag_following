@@ -12,13 +12,14 @@ import cv2
 from apriltag_detection import *
 from lane_following import *
 from lane_detection import *
+from depthControl import *
 
 
 
 # Create the video object
 video = Video()
 # Create the PID object
-pid_vertical = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
+pid_vertical = PID(K_p=50, K_i=1, K_d=-27.5, integral_limit=100)
 pid_horizontal = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
 pid_horizontal_lf = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
 pid_heading_lf = PID(K_p=30, K_i=0, K_d=-10, integral_limit=100)
@@ -37,6 +38,7 @@ lateral_power = 0
 yaw_power = 0
 longitudinal_power = 0
 followRobot = False
+# lanesDetected = False
 
 def lane_PID(heading_error, strafe_error, heading_pid, strafe_pid):
     heading_output = np.clip(heading_pid.update(heading_error),-100,100) * 100
@@ -80,54 +82,56 @@ def _get_frame():
                 print(frame.shape)
                 
                 
-                # tags, tag_z = detect_tag(frame, at_detector) # detects and returns all apriltags in the given frame
-                # print("Got frame")
+                tags, tag_z = detect_tag(frame, at_detector) # detects and returns all apriltags in the given frame
+                print("Got frame")
                 # Checks if any apriltags have been detected
-                # if len(tags) > 0:
-                #     # Sets followRobot variable to True so the robot will track the robot's apriltag and move towards it
-                #     followRobot = True
-                #     # Utilizies the last tag found
-                #     center_tags = tags[-1]
-                #     print("Got tag")
-                #     # Gets the horizontal and vertical outputs for the PID to make thruster adjustments and move towards the other AUV's apriltag
-                #     horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
-                #     # Draws the arrows in terms of where the apriltag is in relation to the center of the AUV's camera
-                #     img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
+                if len(tags) > 0:
+                    # Sets lanesDetected to False so depth control isn't activated
+                    #lanesDetected = False
+                    # Sets followRobot variable to True so the robot will track the robot's apriltag and move towards it
+                    followRobot = True
+                    # Utilizies the last tag found
+                    center_tags = tags[-1]
+                    print("Got tag")
+                    # Gets the horizontal and vertical outputs for the PID to make thruster adjustments and move towards the other AUV's apriltag
+                    horizontal_output, vertical_output = PID_tags(frame.shape, center_tags[0], center_tags[1], horizontal_pid, vertical_pid)
+                    # Draws the arrows in terms of where the apriltag is in relation to the center of the AUV's camera
+                    img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
                     
-                #     # Sets vertical and lateral/horizontal power for the thrusters
-                #     #vertical_power = vertical_output
-                #     #lateral_power = horizontal_output
+                    # Sets vertical and lateral/horizontal power for the thrusters
+                    #vertical_power = vertical_output
+                    #lateral_power = horizontal_output
 
-                #     # Goes straight forward if the apriltag is already in the center of the AUV's camera
-                #     if(vertical_power < 0.1 and lateral_power < 0.1):
-                #        pass
-                #        # longitudinal_power = 20
-                #     # Sets longitudinal/forward thruster magnitudes to 0 so it doesn't go forward
-                #     else:
-                #         longitudinal_power = 0
+                    # Goes straight forward if the apriltag is already in the center of the AUV's camera
+                    if(vertical_power < 0.1 and lateral_power < 0.1):
+                       pass
+                       # longitudinal_power = 20
+                    # Sets longitudinal/forward thruster magnitudes to 0 so it doesn't go forward
+                    else:
+                        longitudinal_power = 0
                     
-                #     # Writes image so we can see the apriltag the AUV detected in VS Code
-                #     cv2.imwrite("ROV_frame.jpg", img)
+                    # Writes image so we can see the apriltag the AUV detected in VS Code
+                    cv2.imwrite("ROV_frame.jpg", img)
 
-                #     # Turns off thrusters and flashes lights on and off if the AUV is in "shooting" range of the other AUV
-                #     tag_z = None
-                #     if (tag_z<1):
-                #         vertical_power = 0
-                #         lateral_power = 0
-                #         longitudinal_power = 0
+                    # Turns off thrusters and flashes lights on and off if the AUV is in "shooting" range of the other AUV
+                    tag_z = None
+                    if (tag_z<1):
+                        vertical_power = 0
+                        lateral_power = 0
+                        longitudinal_power = 0
 
-                #         for i in range(10):
-                #             bluerov.set_rc_channel(9,1100)
-                #             time.sleep(0.2)
-                #             bluerov.set_rc_channel(9,1500)
-                #             time.sleep(0.2)
+                        for i in range(10):
+                            bluerov.set_rc_channel(9,1100)
+                            time.sleep(0.2)
+                            bluerov.set_rc_channel(9,1500)
+                            time.sleep(0.2)
 
-                # # If no AUV's apriltag is detected, the AUV shuts off all thrusters and prepares to follow the lanes
-                # else:
-                #     followRobot = False
-                #     vertical_power = 0
-                #     lateral_power = 0
-                #     longitudinal_power = 0
+                # If no AUV's apriltag is detected, the AUV shuts off all thrusters and prepares to follow the lanes
+                else:
+                    followRobot = False
+                    vertical_power = 0
+                    lateral_power = 0
+                    longitudinal_power = 0
                 
                 followRobot = False
                 
@@ -154,7 +158,6 @@ def _get_frame():
                         print("got line")
                         print("attempting to pick a lane")
                         try:
-                            
                             pickedLane = PickLaneFromImage(frame)
                             draw_Single_lane(img,pickedLane)
                             center_intercept, center_slope = get_lane_center(img.shape[1],pickedLane)
@@ -174,8 +177,7 @@ def _get_frame():
                                 pass
                                 # Sets longitudinal power to 0 so the robot moves forward
                                 #longitudinal_power = 20
-                            
-
+                            #lanesDetected = True
                         except:
                             pickedLane = None
                         
@@ -203,7 +205,20 @@ def _get_frame():
                     
     except KeyboardInterrupt:
         return
-
+    
+def depth_control():
+    global vertical_power, followRobot
+    # mav = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
+    mav = bluerov.mav_connection
+    if(followRobot == False):
+        while True:
+            msg = mav.recv_match(type="SCALED_PRESSURE2", blocking=True)
+            press_abs = msg.press_abs
+            current_depth = press_to_depth(press_abs)
+            error = 0.5 - current_depth
+            output = pid_vertical(error)
+            print(f"depth output:{output}")
+            #bluerov.set_vertical_power(output)
 
 def _send_rc():
     global vertical_power, lateral_power, yaw_power, longitudinal_power
@@ -223,6 +238,10 @@ def _send_rc():
 video_thread = Thread(target=_get_frame)
 video_thread.start()
 
+# Start the depth control thread
+depth_thread = Thread(target=depth_control)
+depth_thread.start()
+
 # Start the RC thread
 rc_thread = Thread(target=_send_rc)
 rc_thread.start()
@@ -233,6 +252,7 @@ try:
         mav_comn.wait_heartbeat()
 except KeyboardInterrupt:
     video_thread.join()
+    depth_thread.join()
     rc_thread.join()
     bluerov.disarm()
     print("Exiting...")
