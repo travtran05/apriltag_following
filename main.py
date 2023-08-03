@@ -60,14 +60,6 @@ def _get_frame():
                     decode_sharpening=0.25,
                     debug=0)
     
-    at_wall_detector = Detector(families='tag36h11', # should change tag
-                    nthreads=1,
-                    quad_decimate=1.0,
-                    quad_sigma=0.0,
-                    refine_edges=1,
-                    decode_sharpening=0.25,
-                    debug=0)
-    
     # Keeps waiting until a video frame is available
     while not video.frame_available():
         print("Waiting for frame...")
@@ -105,18 +97,19 @@ def _get_frame():
                         longitudinal_power = 0
                     
                     # Writes image so we can see the apriltag the AUV detected in VS Code
-                    cv2.imwrite("ROV_frame.jpg", img)
+                    # cv2.imwrite("ROV_frame.jpg", img)
 
                     # Turns off thrusters and flashes lights on and off if the AUV is in "shooting" range of the other AUV
                     if (center_tags.pose_t[2]<1):
+                        vertical_power = 0
+                        lateral_power = 0
+                        longitudinal_power = 0
+
                         for i in range(10):
                             bluerov.set_rc_channel(9,1100)
                             time.sleep(0.2)
                             bluerov.set_rc_channel(9,1500)
-
-                        vertical_power = 0
-                        lateral_power = 0
-                        longitudinal_power = 0
+                            time.sleep(0.2)
 
                 # If no AUV's apriltag is detected, the AUV shuts off all thrusters and prepares to follow the lanes
                 else:

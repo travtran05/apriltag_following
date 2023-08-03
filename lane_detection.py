@@ -7,22 +7,48 @@ import math
 
 def angle_between_lines(m1, m2):
     """
-    Calculate the angle between two lines given their slopes.
-    :param m1: Slope of line 1
-    :param m2: Slope of line 2
-    :return: Angle between the two lines in degrees
+    Function: Calculate the angle between two lines given their slopes.
+
+    Parameters:
+        - m1 (float): Slope of line 1
+        - m2 (float): Slope of line 2
+    
+    Return: Angle between the two lines in degrees
     """
+
+    # Calculates angle between the two lines
     tan_theta = abs((m2 - m1) / (1 + m1 * m2))
     theta = math.atan(tan_theta)
     return math.degrees(theta)
 
 def detect_lines(img,threshold1 = 50,threshold2 = 150,apertureSize = 3,minLineLength=100,maxLineGap=10):
-    """ takes an image as an input and returns a list of detected lines"""
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # convert to grayscale
+    """
+    Function: Detects the lines on a given frame
+    
+    Parameters:
+        - img: the current frame from the AUV
+        - threshold1 (int): the minimum threshold for the Canny edges detection (default value is 50)
+        - threshold2 (int): the maximum threshold for the Canny edges detection (default value is 150)
+        - apertureSize (int): how much light gets into the camera (can be an odd integer from 3-7, default value is 3)
+        - minLineLength (int): the minimum length in pixels for a detected line to actually be considered a line (default value is 100)
+        - maxLineGap (int): the maximum gap in pixels between two lines for them to be considered different lines (default value is 10)
+
+    Return: The list of lines that are detected on the given frame
+    """
+
+    # Converts image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+
+    # Uses gaussian blur to blur the image so the tiny tiles at the bottom of the pool aren't detected as lines
     blurred_image = cv2.GaussianBlur(gray, (9, 9), 0)
+
     #plt.imshow(cv2.cvtColor(blurred_image, cv2.COLOR_BGR2RGB))
     #plt.show()
-    edges = cv2.Canny(blurred_image, threshold1, threshold2, apertureSize) # detect edges
+
+    # Uses Canny edge detection to detect the lines
+    edges = cv2.Canny(blurred_image, threshold1, threshold2, apertureSize) 
+
+    # Uses Hough Lines Probabilistic transformation to detect the lines in the pool based on given parameters
     lines = cv2.HoughLinesP(
             edges,
             rho = 1,
@@ -30,9 +56,8 @@ def detect_lines(img,threshold1 = 50,threshold2 = 150,apertureSize = 3,minLineLe
             threshold = 100,
             minLineLength = minLineLength,
             maxLineGap = maxLineGap,
-
-
     )
+
     #plt.imshow(cv2.cvtColor(edges, cv2.COLOR_BGR2RGB))
     #plt.show()
     #print (lines)
@@ -40,23 +65,54 @@ def detect_lines(img,threshold1 = 50,threshold2 = 150,apertureSize = 3,minLineLe
     return lines
 
 def draw_lines(img,lines,color = (0, 255, 0)):
+    """
+    Function: Draws the lines that the AUV detects on the frame
+    
+    Parameters:
+        - img: the current frame from the AUV
+        - lines: a list of lines that the AUV detected
+        - color: the RGB values for the color of the line
+        
+    Return: The image with the lines drawn on it
+    """
+
+    # Draws every line detected in the frame
     for line in lines:
         x1, y1, x2, y2 = line[0]
         cv2.line(img, (x1, y1), (x2, y2), color, 6)
     return img
 
 def get_slopes_intercepts(lines):
-    resultSet = set() #stores the slope as the key, and the intercept as the data
+    """
+    Function: Calculates the slopes and x-intercepts of the lines detected in the frame
+    
+    Parameters:
+        - lines (list): a list of lines detected on the frame
+        
+    Return: The lists of slopes and x-intercepts for the lines detected on the frame
+    """
+
+    # Stores the slope as the key, and the intercept as the data
+    resultSet = set()
+
+    # Initializes slope and x-intercept lists
     slopeList = []
     xInterceptList = []
+
+    # Calculates the slopes and x-intercepts for any lines that were detected
     if len(lines) > 0:
         for line in lines:
+            # Calculates slope of line
             x1, y1, x2, y2 = line[0]
             slope = (y1-y2)/(x1-x2)
             if slope == 0:
                 slope = 0.001
+
+            # Calculates the x-intercept of the line
             xIntercept = ((((1080 - y1)/slope)  )+ x1)
             roundXIntercept = round(xIntercept, 0)
+
+            # Adds the slope and x-intercepts if they aren't already detected in the resultSet
             if not roundXIntercept in resultSet:
                 resultSet.add(roundXIntercept) 
                 xInterceptList.append(xIntercept)
@@ -159,6 +215,17 @@ def pick_lane(lanes):
     return pickedLane
 
 def draw_lanes(img,lanes,color = (255, 0, 0)):
+    """
+    Function: Draws the lanes detected on the image
+    
+    Parameters:
+        - img: the current frame of the AUV
+        - lanes (list): a list of lanes detected on the image
+        - color (tuple): the RGB color values for the lanes
+        
+    Return: The image with the lanes drawn on it
+    """
+
     for addedLanes in lanes:
         color = (randrange(255),randrange(255),randrange(255))
         for lane in addedLanes:
@@ -170,6 +237,16 @@ def draw_lanes(img,lanes,color = (255, 0, 0)):
     return img
 
 def draw_Single_lane(img,lanes,color = (255, 0, 0)):
+    """
+    Function: Draws a single lane (used to draw the lane closest to the AUV)
+
+    Parameters:
+        - img: the current frame of the AUV
+        - lanes (list): a list of the lanes detected on the image (we feed in the lane closest to the AUV)
+        - color (tuple): the RGB color values for the lanes
+
+    Return: The image with the lane drawn on it
+    """
     #color = (randrange(255),randrange(255),randrange(255))
     for lane in lanes:
         
