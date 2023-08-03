@@ -2,9 +2,9 @@ import cv2
 from random import randrange
 import numpy as np
 import matplotlib.pyplot as plt
-#from dt_apriltags import Detector
 import matplotlib.cm as cm
 import math
+
 def angle_between_lines(m1, m2):
     """
     Calculate the angle between two lines given their slopes.
