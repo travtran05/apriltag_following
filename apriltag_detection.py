@@ -37,8 +37,10 @@ def detect_tag(frame, at_detector, cameraMatrix = numpy.array([ 353.571428571, 0
     if len(tags) > 0: 
         for tag in tags:
             pos.append(tag.center)
+            # print(tag)
+            tag_z = tag.pose_t[2]
 
-    return pos
+    return pos, tag_z
 
 def PID_tags(frameShape, horizontal_distance, vertical_distance, horizontal_pid, vertical_pid):
     '''

@@ -58,6 +58,7 @@ def detect_lines(img,threshold1 = 50,threshold2 = 150,apertureSize = 3,minLineLe
             maxLineGap = maxLineGap,
     )
 
+    
     #plt.imshow(cv2.cvtColor(edges, cv2.COLOR_BGR2RGB))
     #plt.show()
     #print (lines)
