@@ -106,11 +106,13 @@ def main():
 
         output = pid.update(error)
         print("Output: ", output)
-
+        
+        '''
         # set vertical power
         set_vertical_power(
             mav, -output
         )  # negative because of the direction of the thruster
+        '''
 
 
 if __name__ == "__main__":
