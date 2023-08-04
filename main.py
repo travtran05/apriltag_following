@@ -67,7 +67,7 @@ def _get_frame():
         print("Waiting for frame...")
         sleep(0.01)
 
-    bluerov.set_rc_channel(9, 1100) #turns lights off if we need to
+    # bluerov.set_rc_channel(9, 1100) #turns lights off if we need to
     # Tries to process a frame and adjust the robot's movement accordingly
     try:
         while True:
@@ -99,14 +99,14 @@ def _get_frame():
 
                     # Goes straight forward if the apriltag is already in the center of the AUV's camera
                     if(vertical_power < 0.1 and lateral_power < 0.1):
-                       pass
-                       # longitudinal_power = 20
+                       #pass
+                       longitudinal_power = 20
                     # Sets longitudinal/forward thruster magnitudes to 0 so it doesn't go forward
                     else:
                         longitudinal_power = 0
                     
                     # Writes image so we can see the apriltag the AUV detected in VS Code
-                    cv2.imwrite("ROV_frame.jpg", img)
+                    # cv2.imwrite("ROV_frame.jpg", img)
 
                     # Turns off thrusters and flashes lights on and off if the AUV is in "shooting" range of the other AUV
                     tag_z = None
@@ -117,9 +117,9 @@ def _get_frame():
 
                         for i in range(10):
                             bluerov.set_rc_channel(9,1100)
-                            time.sleep(0.2)
+                            time.sleep(0.1)
                             bluerov.set_rc_channel(9,1500)
-                            time.sleep(0.2)
+                            time.sleep(0.1)
 
                 # If no AUV's apriltag is detected, the AUV shuts off all thrusters and prepares to follow the lanes
                 else:
@@ -151,7 +151,7 @@ def _get_frame():
                         
                         
                         print("got line")
-                        print("attempting to pick a lane")
+                        #print("attempting to pick a lane")
                         try:
                             pickedLane = PickLaneFromImage(frame)
                             draw_Single_lane(img,pickedLane)
@@ -159,10 +159,8 @@ def _get_frame():
                             #print(f"center_intercept:{center_intercept} center_slope:{center_slope}")
                             HorizontalDiff, AproxAUVAngle = recommend_direction(img.shape[1], center_intercept, center_slope)
                             #print (f"HorizontalDiff:{HorizontalDiff/40} AproxAUVAngle: {AproxAUVAngle/2}")
-                            #yaw_power = AproxAUVAngle/1
-                            #lateral_power = HorizontalDiff/10
                             
-                            if(abs(HorizontalDiff) < 50 and abs(AproxAUVAngle < 8)):
+                            if(abs(HorizontalDiff) < 30 and abs(AproxAUVAngle < 6)):
                                 yaw_power = 0
                                 lateral_power = 0
                                 # Sets longitudinal power to 0 so the robot moves forward
@@ -213,8 +211,9 @@ def depth_control():
     # mav = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
     
     # mav = bluerov.mav_connection
+    # if this doesn't work, then replace bluerov.mav_connection with mav_comm
     while True:
-        #if(followRobot == False):
+        #if(followRobot == False): # remember to uncomment----------------------------------------------------------------
         print("Got into depth control loop")
         msg = bluerov.mav_connection.recv_match(type="SCALED_PRESSURE2", blocking=True)
         press_abs = msg.press_abs
@@ -222,7 +221,7 @@ def depth_control():
         error = 0.5 - current_depth
         output = pid_vertical(error)
         print(f"depth output:{output}")
-        vertical_power = -output
+        vertical_power = output
         #print(vertical_power)
         #bluerov.set_vertical_power(output)
 
