@@ -34,6 +34,7 @@ def detect_tag(frame, at_detector, cameraMatrix = numpy.array([ 353.571428571, 0
     # tags = at_detector.detect(img, True, )
     
     pos = []
+    tag_z = 0
     if len(tags) > 0: 
         for tag in tags:
             pos.append(tag.center)

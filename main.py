@@ -21,8 +21,8 @@ video = Video()
 # Create the PID object
 pid_vertical = PID(K_p=50, K_i=1, K_d=-27.5, integral_limit=100)
 pid_horizontal = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
-pid_horizontal_lf = PID(K_p=0.1, K_i=0.0, K_d=0.01, integral_limit=1)
-pid_heading_lf = PID(K_p=30, K_i=0, K_d=-10, integral_limit=100)
+pid_horizontal_lf = PID(K_p=5, K_i=0.0, K_d=0.01, integral_limit=1)
+pid_heading_lf = PID(K_p=0.1, K_i=0, K_d=-0.01, integral_limit=100)
 # Create the mavlink connection
 mav_comn = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
 # Create the BlueROV object
@@ -38,12 +38,7 @@ lateral_power = 0
 yaw_power = 0
 longitudinal_power = 0
 followRobot = False
-# lanesDetected = False
-
-def lane_PID(heading_error, strafe_error, heading_pid, strafe_pid):
-    heading_output = np.clip(heading_pid.update(heading_error),-100,100) * 100
-    strafe_output = np.clip(strafe_pid.update(strafe_error),-100,100) * 100
-    return heading_output, strafe_output 
+# lanesDetected = Falseå
 
 
 def _get_frame():
@@ -79,7 +74,7 @@ def _get_frame():
             if video.frame_available():
                 frame = video.frame() # Initializes the frame
                 
-                print(frame.shape)
+                #print(frame.shape)
                 
                 
                 tags, tag_z = detect_tag(frame, at_detector) # detects and returns all apriltags in the given frame
@@ -99,8 +94,8 @@ def _get_frame():
                     img = drawOnImage(frame, center_tags, horizontal_output, vertical_output)
                     
                     # Sets vertical and lateral/horizontal power for the thrusters
-                    #vertical_power = vertical_output
-                    #lateral_power = horizontal_output
+                    vertical_power = vertical_output
+                    lateral_power = horizontal_output
 
                     # Goes straight forward if the apriltag is already in the center of the AUV's camera
                     if(vertical_power < 0.1 and lateral_power < 0.1):
@@ -142,11 +137,11 @@ def _get_frame():
 
                     #turn
                     #print (img.shape)
-                    cropped_image = frame[10:360, 10:640]# crop the image cause theres garbage on the sides
+                    cropped_image = frame[180:360, 10:600]# crop the image cause theres garbage on the sides
                     frame = cropped_image
                     # Creates a list of the lines that have been detected
                     line_list = detect_lines(frame, 40, 110, 3, 10, 10)
-                    print (line_list)
+                    #print (line_list)
 
                     
                     # Tries to detect the lanes from any lines that have been found
@@ -161,22 +156,28 @@ def _get_frame():
                             pickedLane = PickLaneFromImage(frame)
                             draw_Single_lane(img,pickedLane)
                             center_intercept, center_slope = get_lane_center(img.shape[1],pickedLane)
-                            print(f"center_intercept:{center_intercept} center_slope:{center_slope}")
+                            #print(f"center_intercept:{center_intercept} center_slope:{center_slope}")
                             HorizontalDiff, AproxAUVAngle = recommend_direction(img.shape[1], center_intercept, center_slope)
-                            print (f"HorizontalDiff:{HorizontalDiff/40} AproxAUVAngle: {AproxAUVAngle/2}")
+                            #print (f"HorizontalDiff:{HorizontalDiff/40} AproxAUVAngle: {AproxAUVAngle/2}")
                             #yaw_power = AproxAUVAngle/1
                             #lateral_power = HorizontalDiff/10
                             
-                            if(abs(HorizontalDiff) < 20 and abs(AproxAUVAngle < 3)):
+                            if(abs(HorizontalDiff) < 50 and abs(AproxAUVAngle < 8)):
+                                yaw_power = 0
+                                lateral_power = 0
+                                # Sets longitudinal power to 0 so the robot moves forward
+                                longitudinal_power = 20
+                                
+                            else:
                                 # Sets longitudinal power to 0 to make sure the AUV isn't moving straight at the same time the robot is realigning itself
                                 longitudinal_power = 0
                                 # Calculates the yaw and lateral thruster powers
-                                yaw_power, lateral_power = lane_PID(AproxAUVAngle, HorizontalDiff/100, pid_heading_lf, pid_horizontal_lf)
+                                yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, HorizontalDiff/100, pid_heading_lf, pid_horizontal_lf)
+                                yaw_power = int(yaw_power)
+                                lateral_power = int(lateral_power)
+                                print(f"yaw_power: {yaw_power}")
+                                print(f"lateral_power: {lateral_power}")
                                 # yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, 0, pid_heading_lf, pid_horizontal_lf)
-                            else:
-                                pass
-                                # Sets longitudinal power to 0 so the robot moves forward
-                                #longitudinal_power = 20
                             #lanesDetected = True
                         except:
                             pickedLane = None
@@ -199,6 +200,7 @@ def _get_frame():
                         followRobot = False
                         vertical_power = 0
                         lateral_power = 0
+                        yaw_power = 0
                         longitudinal_power = 0
                     # Turns off thrusters and sets followRobot to False in case no lines/lanes are detected
                         
@@ -210,15 +212,18 @@ def depth_control():
     global vertical_power, followRobot
     # mav = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
     mav = bluerov.mav_connection
-    if(followRobot == False):
-        while True:
-            msg = mav.recv_match(type="SCALED_PRESSURE2", blocking=True)
-            press_abs = msg.press_abs
-            current_depth = press_to_depth(press_abs)
-            error = 0.5 - current_depth
-            output = pid_vertical(error)
-            print(f"depth output:{output}")
-            #bluerov.set_vertical_power(output)
+    while True:
+        #if(followRobot == False):
+        print("Got into depth control loop")
+        msg = mav.recv_match(type="SCALED_PRESSURE2", blocking=True)
+        press_abs = msg.press_abs
+        current_depth = press_to_depth(press_abs)
+        error = 0.5 - current_depth
+        output = pid_vertical(error)
+        print(f"depth output:{output}")
+        vertical_power = -output
+        #print(vertical_power)
+        #bluerov.set_vertical_power(output)
 
 def _send_rc():
     global vertical_power, lateral_power, yaw_power, longitudinal_power
@@ -226,13 +231,13 @@ def _send_rc():
     mav_comn.set_mode(19)
     while True:
         # bluerov.disarm()
-        # bluerov.arm()
+        bluerov.arm()
 
         # Sets the powers of the thrusters based on outputs for the PID controllers
-        #bluerov.set_vertical_power(int(vertical_power))
+        bluerov.set_vertical_power(int(vertical_power))
         bluerov.set_lateral_power(-int(lateral_power))
         bluerov.set_yaw_rate_power(int(yaw_power))
-        #bluerov.set_longitudinal_power(int(longitudinal_power))
+        bluerov.set_longitudinal_power(int(longitudinal_power))
 
 # Start the video thread
 video_thread = Thread(target=_get_frame)

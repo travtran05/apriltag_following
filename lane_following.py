@@ -94,6 +94,6 @@ def lane_PID(frameWidth, heading_error, strafe_error, heading_pid, strafe_pid):
     Return: The PID outputs for the heading and the horizontal distance/position
     """
     
-    heading_output = np.clip(heading_pid.update(heading_error),-100,100) * 100
-    strafe_output = np.clip(strafe_pid.update(strafe_error/frameWidth),-100,100) * 100
+    heading_output = np.clip(heading_pid.update(heading_error),-100,100)
+    strafe_output = np.clip(strafe_pid.update(strafe_error/frameWidth),-100,100)
     return heading_output, strafe_output
