@@ -27,7 +27,7 @@ def run_motors_timed(mav_connection, seconds: int, motor_settings: list) -> None
     Run the motors for a set time
     :param mav_connection: The mavlink connection
     :param time: The time to run the motors
-    :param motor_settings: The motor settings, a list of 6 values -100 to 100
+    :param motor_settings: The motor settings, a list of 6 values -50 to 50
     :return: None
     """
     start_time = time.time()
@@ -39,32 +39,32 @@ def run_motors_timed(mav_connection, seconds: int, motor_settings: list) -> None
 def forward_cw_spin():
     '''Makes robot go forward while spinning'''
     sec = 3.8325
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[-100,-100 ,0 ,100, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[-50,-50 ,0 ,50, 0, 0])
     #print("command one")
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[100,100,0,100, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[50,50,0,50, 0, 0])
     #print("command two")
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[100,0 ,-100 ,-100, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[50,0 ,-50 ,-50, 0, 0])
     #print("command three")
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[100,0, 100,100, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[50,0, 50,50, 0, 0])
     #print("command four")
-    run_motors_timed(mav_connection, seconds=0.2, motor_settings=[100,-100 ,-100 ,100, 0, 0])
+    run_motors_timed(mav_connection, seconds=0.2, motor_settings=[50,-50 ,-50 ,50, 0, 0])
 
 def forward_ccw_spin():
     sec = 3.8325
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[-100,-100 ,100 ,0, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[-50,-50 ,50 ,0, 0, 0])
     print("command one")
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[100,100,100,0, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[50,50,50,0, 0, 0])
     print("command two")
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[0,100 ,-100 ,-100, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[0,50 ,-50 ,-50, 0, 0])
     print("command three")
-    run_motors_timed(mav_connection, seconds=sec, motor_settings=[0,100, 100,100, 0, 0])
+    run_motors_timed(mav_connection, seconds=sec, motor_settings=[0,50, 50,50, 0, 0])
     print("command four")
-    run_motors_timed(mav_connection, seconds=0.2, motor_settings=[-100,100 ,100 ,-100, 0, 0])
+    run_motors_timed(mav_connection, seconds=0.2, motor_settings=[-50,50 ,50 ,-50, 0, 0])
 
 def jump():
     run_motors_timed(mav_connection, seconds = 5, motor_settings=[0,0,0,0,-30,-30])
     print("About to jump")
-    run_motors_timed(mav_connection, seconds = 1, motor_settings=[0,0,0,0,100,100])
+    run_motors_timed(mav_connection, seconds = 1, motor_settings=[0,0,0,0,50,50])
 #main
 def pirouette(sec, power, times):
     sec = sec/(power/100)
@@ -80,7 +80,7 @@ def pirouette(sec, power, times):
         print("command four")
        
 def makeBubbles(duration):
-    run_motors_timed(mav_connection, seconds=duration, motor_settings=[0,0, 0 ,0, 100, 100])
+    run_motors_timed(mav_connection, seconds=duration, motor_settings=[0,0, 0 ,0, 50, 50])
 
 def circle(Strafe,turn, power, time):
     StrafeVector = np.array([-Strafe,Strafe,-Strafe,Strafe])
@@ -96,9 +96,9 @@ def circle(Strafe,turn, power, time):
 
 def figureEight():
     
-    circle(100,10, 50,20)
+    circle(50,10, 50,20)
     run_motors_timed(mav_connection, seconds=20, motor_settings=[-50,50, -50 ,50, 0, 0])
-    circle(100,-10, 50,26.5)
+    circle(50,-10, 50,26.5)
     run_motors_timed(mav_connection, seconds=27, motor_settings=[-50,50, -50 ,50, 0, 0])
 if __name__ == "__main__":
 
@@ -118,12 +118,12 @@ if __name__ == "__main__":
     ####
     """
     Call sequence of calls to run_timed_motors to execute choreography
-    Motors power ranges from -100 to 100
+    Motors power ranges from -50 to 50
     """
-    #forward_ccw_spin()
-    #run_motors_timed(mav_connection,5,[100,100,-100,-100,0,0])
-    #forward_cw_spin()
-    #pirouette(5,100,1)
+    forward_ccw_spin()
+    run_motors_timed(mav_connection,5,[50,50,-50,-50,0,0])
+    forward_cw_spin()
+    pirouette(5,50,1)
     figureEight()
     # stop
     run_motors_timed(mav_connection, seconds=5, motor_settings=[0, 0, 0, 0, 0, 0])

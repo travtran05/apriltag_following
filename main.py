@@ -76,7 +76,7 @@ def _get_frame():
                 
                 #print(frame.shape)
                 
-                
+                """
                 tags, tag_z = detect_tag(frame, at_detector) # detects and returns all apriltags in the given frame
                 print("Got frame")
                 # Checks if any apriltags have been detected
@@ -109,8 +109,7 @@ def _get_frame():
                     # cv2.imwrite("ROV_frame.jpg", img)
 
                     # Turns off thrusters and flashes lights on and off if the AUV is in "shooting" range of the other AUV
-                    tag_z = None
-                    if (tag_z<1):
+                    if (tag_z<0.1):
                         vertical_power = 0
                         lateral_power = 0
                         longitudinal_power = 0
@@ -127,9 +126,9 @@ def _get_frame():
                     vertical_power = 0
                     lateral_power = 0
                     longitudinal_power = 0
+                """
                 
                 followRobot = False
-                
                 # Checks if the AUV isn't following another robot and performs lane detection/following
                 if(followRobot == False):
                     #frame = cv2.imread("ROV_frame.jpg")#halllucinate a img during testing
@@ -137,7 +136,8 @@ def _get_frame():
 
                     #turn
                     #print (img.shape)
-                    cropped_image = frame[180:360, 10:600]# crop the image cause theres garbage on the sides
+                    # cropped_image = frame[180:360, 10:600]# crop the image cause theres garbage on the sides
+                    cropped_image = frame[int(frame.shape[0]/2):,]
                     frame = cropped_image
                     # Creates a list of the lines that have been detected
                     line_list = detect_lines(frame, 40, 110, 3, 10, 10)
@@ -155,11 +155,12 @@ def _get_frame():
                         try:
                             pickedLane = PickLaneFromImage(frame)
                             draw_Single_lane(img,pickedLane)
-                            center_intercept, center_slope = get_lane_center(img.shape[1],pickedLane)
+                            center_intercept, center_slope = get_lane_center(cropped_image.shape[1],pickedLane)
                             #print(f"center_intercept:{center_intercept} center_slope:{center_slope}")
-                            HorizontalDiff, AproxAUVAngle = recommend_direction(img.shape[1], center_intercept, center_slope)
+                            HorizontalDiff, AproxAUVAngle = recommend_direction(cropped_image.shape[1], center_intercept, center_slope)
                             #print (f"HorizontalDiff:{HorizontalDiff/40} AproxAUVAngle: {AproxAUVAngle/2}")
                             
+                            # print(Horizontal)
                             if(abs(HorizontalDiff) < 30 and abs(AproxAUVAngle < 6)):
                                 yaw_power = 0
                                 lateral_power = 0
@@ -168,9 +169,9 @@ def _get_frame():
                                 
                             else:
                                 # Sets longitudinal power to 0 to make sure the AUV isn't moving straight at the same time the robot is realigning itself
-                                longitudinal_power = 0
+                                longitudinal_power = 10
                                 # Calculates the yaw and lateral thruster powers
-                                yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, HorizontalDiff/100, pid_heading_lf, pid_horizontal_lf)
+                                yaw_power, lateral_power = lane_PID(frame.shape[0], AproxAUVAngle, HorizontalDiff/40, pid_heading_lf, pid_horizontal_lf)
                                 yaw_power = int(yaw_power)
                                 lateral_power = int(lateral_power)
                                 print(f"yaw_power: {yaw_power}")
@@ -205,25 +206,26 @@ def _get_frame():
                     
     except KeyboardInterrupt:
         return
-    
+
+
 def depth_control():
-    global vertical_power, followRobot
+    global pid_vertical, vertical_power, followRobot
     # mav = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
     
     # mav = bluerov.mav_connection
     # if this doesn't work, then replace bluerov.mav_connection with mav_comm
     while True:
-        #if(followRobot == False): # remember to uncomment----------------------------------------------------------------
-        print("Got into depth control loop")
-        msg = bluerov.mav_connection.recv_match(type="SCALED_PRESSURE2", blocking=True)
-        press_abs = msg.press_abs
-        current_depth = press_to_depth(press_abs)
-        error = 0.5 - current_depth
-        output = pid_vertical(error)
-        print(f"depth output:{output}")
-        vertical_power = output
-        #print(vertical_power)
-        #bluerov.set_vertical_power(output)
+        if(followRobot == False): # remember to uncomment----------------------------------------------------------------
+            print("Got into depth control loop")
+            msg = bluerov.mav_connection.recv_match(type="SCALED_PRESSURE2", blocking=True)
+            press_abs = msg.press_abs
+            current_depth = press_to_depth(press_abs)
+            error = 0.5 - current_depth
+            output = pid_vertical(error)
+            print(f"depth output:{output}")
+            vertical_power = output
+            #print(vertical_power)
+            #bluerov.set_vertical_power(output)
 
 def _send_rc():
     global vertical_power, lateral_power, yaw_power, longitudinal_power
@@ -244,8 +246,8 @@ video_thread = Thread(target=_get_frame)
 video_thread.start()
 
 # Start the depth control thread
-depth_thread = Thread(target=depth_control)
-depth_thread.start()
+#depth_thread = Thread(target=depth_control)
+#depth_thread.start()
 
 # Start the RC thread
 rc_thread = Thread(target=_send_rc)
@@ -257,7 +259,7 @@ try:
         mav_comn.wait_heartbeat()
 except KeyboardInterrupt:
     video_thread.join()
-    depth_thread.join()
+    #depth_thread.join()
     rc_thread.join()
     bluerov.disarm()
     print("Exiting...")
