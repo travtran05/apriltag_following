@@ -211,11 +211,12 @@ def _get_frame():
 def depth_control():
     global vertical_power, followRobot
     # mav = mavutil.mavlink_connection("udpin:0.0.0.0:14550")
-    mav = bluerov.mav_connection
+    
+    # mav = bluerov.mav_connection
     while True:
         #if(followRobot == False):
         print("Got into depth control loop")
-        msg = mav.recv_match(type="SCALED_PRESSURE2", blocking=True)
+        msg = bluerov.mav_connection.recv_match(type="SCALED_PRESSURE2", blocking=True)
         press_abs = msg.press_abs
         current_depth = press_to_depth(press_abs)
         error = 0.5 - current_depth
